@@ -137,10 +137,11 @@ let score = 0, questionIndex = 0, correctCount = 0;
 let currentQuestion = null, stepIndex = 0, typedAnswer = '', isAnswering = false;
 let startTime = 0, timerInterval = null, totalTime = 0;
 const TOTAL_QUESTIONS = 10;
+let questionPool = []; // Bank Soal
 
-function saveDB() { localStorage.setItem('spaceMath_v5', JSON.stringify(DB)); }
+function saveDB() { localStorage.setItem('spaceMath_v6', JSON.stringify(DB)); }
 function loadDB() {
-  try { const d = localStorage.getItem('spaceMath_v5'); if (d) DB = JSON.parse(d); } catch(e) {}
+  try { const d = localStorage.getItem('spaceMath_v6'); if (d) DB = JSON.parse(d); } catch(e) {}
   if (!DB.users) DB.users = {};
   if (!DB.users[globalUser]) DB.users[globalUser] = { stats: {}, totalGames: 0 };
 }
@@ -173,54 +174,96 @@ function selectMode(mode) {
   showScreen('levelScreen');
 }
 
+// === SISTEM BANK SOAL (ANTI DUPLIKAT) ===
+function buildQuestionPool(mode, level) {
+  const pool = [];
+  if (mode === 'kali') {
+    if (level === 'beginner') {
+      for (let a = 1; a <= 5; a++) for (let b = 1; b <= 5; b++) pool.push({a, b, op: '×', ans: a*b});
+    } else if (level === 'intermediate') {
+      const seen = new Set();
+      while(pool.length < 30) {
+        const a = randInt(12, 49); const b = randInt(11, 29); const key = `${a}x${b}`;
+        if(!seen.has(key)) { seen.add(key); pool.push({a, b, op: '×', ans: a*b}); }
+      }
+    } else {
+      const seen = new Set();
+      while(pool.length < 30) {
+        const a = randInt(101, 299); const b = randInt(3, 9); const key = `${a}x${b}`;
+        if(!seen.has(key)) { seen.add(key); pool.push({a, b, op: '×', ans: a*b}); }
+      }
+    }
+  } else {
+    if (level === 'beginner') {
+      for (let b = 1; b <= 5; b++) for (let ans = 1; ans <= 5; ans++) pool.push({a: b*ans, b, op: '÷', ans});
+    } else if (level === 'intermediate') {
+      const seen = new Set();
+      while(pool.length < 30) {
+        const b = randInt(2, 9); const ans = randInt(11, 30); const a = b*ans; const key = `${a}÷${b}`;
+        if(!seen.has(key)) { seen.add(key); pool.push({a, b, op: '÷', ans}); }
+      }
+    } else {
+      const seen = new Set();
+      while(pool.length < 30) {
+        const b = randInt(3, 9); const ans = randInt(12, 49); const a = b*ans; const key = `${a}÷${b}`;
+        if(!seen.has(key)) { seen.add(key); pool.push({a, b, op: '÷', ans}); }
+      }
+    }
+  }
+  // Kocok Bank Soal (Fisher-Yates Shuffle)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
 function startGame(levelId) {
   currentLevel = levelId; score = 0; questionIndex = 0; correctCount = 0; totalTime = 0;
+  questionPool = buildQuestionPool(currentMode, currentLevel); // Buat Bank Soal
   showScreen('gameScreen'); nextQuestion();
 }
+
 function nextQuestion() {
   if (questionIndex >= TOTAL_QUESTIONS) return endGame();
   isAnswering = true; typedAnswer = ''; stepIndex = 0;
   document.getElementById('answerEl').textContent = '_'; document.getElementById('feedbackEl').textContent = '';
   const qArea = document.getElementById('questionArea'); const instEl = document.getElementById('instructionEl'); qArea.innerHTML = ''; instEl.textContent = '';
-  const r = Math.random();
+  
+  const q = questionPool.pop(); // Ambil soal dari Bank Soal
   
   if (currentMode === 'kali') {
     if (currentLevel === 'beginner') {
-      const a = randInt(1, 5); const b = randInt(1, 5); const answer = a * b;
-      currentQuestion = { text: `${a} × ${b} = ?`, answer: String(answer) };
-      instEl.textContent = `Ada ${a} UFO, tiap UFO isi ${b} alien. Total alien?`;
-      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${a} × ${b} = ?</div><div class="ufo-grid">`;
-      for (let i=0; i<a; i++) html += `<div class="ufo-box">🛸 <span>${'👽'.repeat(b)}</span></div>`;
+      currentQuestion = { text: `${q.a} × ${q.b} = ?`, answer: String(q.ans) };
+      instEl.textContent = `Ada ${q.a} UFO, tiap UFO isi ${q.b} alien. Total alien?`;
+      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${q.a} × ${q.b} = ?</div><div class="ufo-grid">`;
+      for (let i=0; i<q.a; i++) html += `<div class="ufo-box">🛸 <span>${'👽'.repeat(q.b)}</span></div>`;
       html += `</div>`; qArea.innerHTML = html;
     } else if (currentLevel === 'intermediate') {
-      const a = randInt(12, 49); const b = randInt(11, 29);
-      const step1 = a * (b % 10); const step2 = a * Math.floor(b/10) * 10; const total = a * b;
-      currentQuestion = { a, b, step1, step2, total, answer: String(total), text: `${a} × ${b}` };
-      qArea.innerHTML = `<div class="math-vertical"><div>${a}</div><div class="math-line">× ${b}</div><div class="math-step active" id="ms1">?</div><div class="math-step" id="ms2">?</div><div class="math-line math-step" id="ms3">+</div><div class="math-step" id="ms4">?</div></div>`;
+      const step1 = q.a * (q.b % 10); const step2 = q.a * Math.floor(q.b/10) * 10; const total = q.ans;
+      currentQuestion = { a: q.a, b: q.b, step1, step2, total, answer: String(total), text: `${q.a} × ${q.b}` };
+      qArea.innerHTML = `<div class="math-vertical"><div>${q.a}</div><div class="math-line">× ${q.b}</div><div class="math-step active" id="ms1">?</div><div class="math-step" id="ms2">?</div><div class="math-line math-step" id="ms3">+</div><div class="math-step" id="ms4">?</div></div>`;
       updateIntermediateStep();
     } else {
-      const a = randInt(101, 299); const b = randInt(3, 9); const total = a * b;
-      currentQuestion = { text: `${a} × ${b}`, answer: String(total) };
+      currentQuestion = { text: `${q.a} × ${q.b}`, answer: String(q.ans) };
       instEl.textContent = `Hitung perkalian:`;
-      qArea.innerHTML = `<div class="math-vertical" style="min-width: 180px;"><div>${a}</div><div class="math-line">× &nbsp;&nbsp;${b}</div><div class="math-step active" style="color:#FBBF24;">?</div></div>`;
+      qArea.innerHTML = `<div class="math-vertical" style="min-width: 180px;"><div>${q.a}</div><div class="math-line">× &nbsp;&nbsp;${q.b}</div><div class="math-step active" style="color:#FBBF24;">?</div></div>`;
     }
   } else {
     if (currentLevel === 'beginner') {
-      const b = randInt(1, 5); const answer = randInt(1, 5); const a = b * answer;
-      currentQuestion = { text: `${a} ÷ ${b} = ?`, answer: String(answer) };
-      instEl.textContent = `Ada ${a} alien dibagi ke ${b} UFO. Tiap UFO isi berapa?`;
-      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${a} ÷ ${b} = ?</div><div class="ufo-grid">`;
-      html += `<div class="ufo-box" style="font-size:20px;">${'👽'.repeat(a)}</div>`;
-      html += `<div style="width:100%; font-size:20px; margin: 5px 0;">⬇️ dibagi ${b} UFO ⬇️</div>`;
-      for (let i=0; i<b; i++) html += `<div class="ufo-box">🛸 <span>?</span></div>`;
+      currentQuestion = { text: `${q.a} ÷ ${q.b} = ?`, answer: String(q.ans) };
+      instEl.textContent = `Ada ${q.a} alien dibagi ke ${q.b} UFO. Tiap UFO isi berapa?`;
+      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${q.a} ÷ ${q.b} = ?</div><div class="ufo-grid">`;
+      html += `<div class="ufo-box" style="font-size:20px;">${'👽'.repeat(q.a)}</div>`;
+      html += `<div style="width:100%; font-size:20px; margin: 5px 0;">⬇️ dibagi ${q.b} UFO ⬇️</div>`;
+      for (let i=0; i<q.b; i++) html += `<div class="ufo-box">🛸 <span>?</span></div>`;
       html += `</div>`; qArea.innerHTML = html;
     } else if (currentLevel === 'intermediate') {
-      const pembagi = randInt(2, 9); const hasil = randInt(11, 30); const dibagi = pembagi * hasil;
-      currentQuestion = { text: `${dibagi} ÷ ${pembagi}`, answer: String(hasil) };
+      currentQuestion = { text: `${q.a} ÷ ${q.b}`, answer: String(q.ans) };
       instEl.textContent = `Hitung hasil pembagian:`;
-      qArea.innerHTML = `<div class="porogapit-box"><div class="pg-row"><div style="padding-top: 25px;">${pembagi}</div><div class="pg-bracket">${dibagi}</div></div></div>`;
+      qArea.innerHTML = `<div class="porogapit-box"><div class="pg-row"><div style="padding-top: 25px;">${q.b}</div><div class="pg-bracket">${q.a}</div></div></div>`;
     } else { 
-      const pembagi = randInt(3, 9); const hasil = randInt(12, 49); const dibagi = pembagi * hasil;
+      const pembagi = q.b; const hasil = q.ans; const dibagi = q.a;
       const d1 = Math.floor(dibagi / 10); const d2 = dibagi % 10;
       const step1 = Math.floor(d1 / pembagi); const sisa1 = d1 % pembagi;
       const turun = (sisa1 * 10) + d2; const step2 = Math.floor(turun / pembagi);
@@ -237,6 +280,7 @@ function nextQuestion() {
     timerInterval = setInterval(() => { document.getElementById('timerEl').textContent = `⏱️ ${((Date.now() - startTime) / 1000).toFixed(1)}s`; }, 100);
   }
 }
+
 function updateIntermediateStep() {
   const instEl = document.getElementById('instructionEl');
   if (stepIndex === 0) instEl.textContent = `Langkah 1: Hitung ${currentQuestion.a} × ${currentQuestion.b % 10}`;
