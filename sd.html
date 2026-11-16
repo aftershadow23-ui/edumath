@@ -151,6 +151,7 @@ let DB = { users: {}, currentUser: globalUser };
 let currentClass = 1, currentLevel = 'beginner';
 let score = 0, questionIndex = 0, correctCount = 0;
 let currentQuestion = null, answerLocked = false, audioCtx;
+let sessionQuestions = []; // Bank Soal
 const TOTAL_QUESTIONS = 10;
 
 function saveDB() { localStorage.setItem('edumath_sd_stats', JSON.stringify(DB)); }
@@ -194,6 +195,7 @@ function showLevelSelection(classId) {
   showScreen('levelScreen');
 }
 
+// === GENERATOR SOAL ===
 function genBeginner(c) {
   const r = Math.random();
   if (c === 1) { if (r < 0.5) { const a = randInt(1, 10), b = randInt(1, 10); return numQ(`${a} + ${b} = ?`, a+b, `Tambahkan:\n${a} + ${b} = ${a+b}`); } else { const a = randInt(3, 20), b = randInt(1, a); return numQ(`${a} − ${b} = ?`, a-b, `Kurangkan:\n${a} - ${b} = ${a-b}`); } }
@@ -223,6 +225,27 @@ function genAdvanced(c) {
 }
 function generateQuestion(c, l) { if (l === 'beginner') return genBeginner(c); if (l === 'intermediate') return genIntermediate(c); if (l === 'advanced') return genAdvanced(c); return genBeginner(c); }
 
+// === SISTEM BANK SOAL (ANTI DUPLIKAT) ===
+function prepareQuestions(classId, levelId) {
+  const seenTexts = new Set();
+  sessionQuestions = [];
+  let attempts = 0;
+  // Kita buat 20 soal unik, lalu nanti diambil 10
+  while (sessionQuestions.length < 20 && attempts < 1000) {
+    attempts++;
+    const q = generateQuestion(classId, levelId);
+    if (!seenTexts.has(q.text)) {
+      seenTexts.add(q.text);
+      sessionQuestions.push(q);
+    }
+  }
+  // Kocok (Shuffle) bank soal
+  for (let i = sessionQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sessionQuestions[i], sessionQuestions[j]] = [sessionQuestions[j], sessionQuestions[i]];
+  }
+}
+
 function generateNumericOptions(n) {
   const opts = new Set([String(n)]); const maxOff = Math.max(3, Math.ceil(Math.abs(n) * 0.25)); let t = 0;
   while (opts.size < 4 && t < 100) { t++; let off = randInt(1, maxOff); if (Math.random() < 0.5) off = -off; opts.add(String(n + off)); }
@@ -250,6 +273,7 @@ function generateOptions(q) {
 
 function startGame(classId, levelId) {
   currentClass = classId; currentLevel = levelId; score = 0; questionIndex = 0; correctCount = 0;
+  prepareQuestions(classId, levelId); // Siapkan Bank Soal Unik
   const user = DB.users[globalUser];
   document.getElementById('gAvatar').textContent = user.avatar;
   document.getElementById('gName').textContent = globalUser;
@@ -259,9 +283,12 @@ function startGame(classId, levelId) {
 function nextQuestion() {
   answerLocked = false; document.getElementById('feedbackEl').textContent = '';
   document.getElementById('feedbackEl').className = 'feedback'; document.getElementById('solutionBox').classList.add('hidden'); document.getElementById('nextBtn').classList.add('hidden');
-  currentQuestion = generateQuestion(currentClass, currentLevel);
+  
+  currentQuestion = sessionQuestions.pop(); // Ambil dari Bank Soal
+  
   const qEl = document.getElementById('questionEl'); qEl.textContent = currentQuestion.text; qEl.classList.remove('long', 'very-long');
   if (currentQuestion.text.length > 55) qEl.classList.add('very-long'); else if (currentQuestion.text.length > 30) qEl.classList.add('long');
+  
   const options = generateOptions(currentQuestion); const optEl = document.getElementById('optionsEl'); optEl.innerHTML = '';
   options.forEach(opt => {
     const btn = document.createElement('button'); btn.className = 'option';
