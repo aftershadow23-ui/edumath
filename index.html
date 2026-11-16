@@ -4,38 +4,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EduMath Universe</title>
-<meta name="theme-color" content="#1E293B">
+<meta name="theme-color" content="#0f0c29">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  /* 1. BACKGROUND LUAR ANGKASA (Memanggil file bg-space.jpg) */
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 100%);
+    background-image: url('bg-space.jpg'); /* <--- GAMBAR LATAR DI SINI */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     min-height: 100vh; display: flex; padding: 20px; color: #fff;
     overflow-x: hidden;
   }
-  /* Animasi Bintang di Background */
-  body::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background-image: 
-      radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
-      radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
-      radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
-    background-repeat: repeat; background-size: 200px 200px;
-    opacity: 0.4; z-index: -1; animation: twinkle 5s infinite alternate;
-  }
-  @keyframes twinkle { from { opacity: 0.2; } to { opacity: 0.5; } }
-
+  
+  /* Kotak Utama (Glassmorphism) */
   .container {
-    margin: auto; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px);
-    border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 24px; padding: 35px 25px;
-    max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    margin: auto; 
+    background: rgba(15, 10, 30, 0.6); /* Kaca gelap transparan */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid rgba(139, 92, 246, 0.6); 
+    border-radius: 30px; padding: 35px 25px;
+    max-width: 450px; width: 100%; 
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.4), inset 0 0 20px rgba(139, 92, 246, 0.2); 
     text-align: center; position: relative;
   }
-  h1 { font-family: 'Orbitron', sans-serif; color: #60A5FA; font-size: 26px; margin-bottom: 8px; text-shadow: 0 0 15px rgba(96, 165, 250, 0.6); letter-spacing: 1px; }
-  .subtitle { color: #94A3B8; font-size: 14px; margin-bottom: 25px; }
+  
+  h1 { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 26px; margin-bottom: 8px; text-shadow: 0 0 15px #8B5CF6, 0 0 30px #3B82F6; letter-spacing: 1px; }
+  .subtitle { color: #A78BFA; font-size: 14px; margin-bottom: 25px; font-weight: 500; }
   
   /* LOGIN BOX */
   #loginBox input {
@@ -44,23 +45,23 @@
     margin-bottom: 15px; outline: none; text-align: center; font-weight: bold;
     transition: border 0.3s, box-shadow 0.3s;
   }
-  #loginBox input:focus { border-color: #60A5FA; box-shadow: 0 0 15px rgba(96, 165, 250, 0.5); }
+  #loginBox input:focus { border-color: #A78BFA; box-shadow: 0 0 15px rgba(167, 139, 250, 0.5); }
   
   .btn-login {
     width: 100%; padding: 16px; font-size: 16px; font-weight: bold; font-family: inherit;
-    background: linear-gradient(90deg, #3B82F6, #8B5CF6); color: #fff; 
+    background: linear-gradient(90deg, #6366F1, #8B5CF6); color: #fff; 
     border: none; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
     text-transform: uppercase; letter-spacing: 1px;
   }
-  .btn-login:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); }
+  .btn-login:hover { transform: scale(1.03); box-shadow: 0 0 25px rgba(139, 92, 246, 0.8); }
 
   /* MENU BOX */
   #menuBox { display: none; }
   .user-badge {
     display: inline-flex; align-items: center; gap: 10px;
     background: rgba(15, 23, 42, 0.8); padding: 10px 20px; border-radius: 30px;
-    font-weight: bold; color: #60A5FA; margin-bottom: 25px; 
-    border: 1px solid #334155; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    font-weight: bold; color: #A78BFA; margin-bottom: 25px; 
+    border: 1px solid rgba(139, 92, 246, 0.5); box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
   }
   .user-badge span.close { cursor: pointer; color: #ef4444; font-size: 14px; margin-left: 10px; transition: transform 0.2s; }
   .user-badge span.close:hover { transform: scale(1.3); }
@@ -68,34 +69,44 @@
   /* GAME CARDS */
   .game-card {
     display: flex; align-items: center; text-align: left;
-    padding: 20px; border-radius: 16px; margin-bottom: 16px;
+    padding: 15px 20px; border-radius: 16px; margin-bottom: 16px;
     cursor: pointer; text-decoration: none; color: #fff;
-    transition: all 0.3s ease; position: relative; overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    position: relative; overflow: hidden;
   }
-  .game-card:hover { transform: translateY(-5px) scale(1.02); }
-  .game-card .card-icon { font-size: 40px; margin-right: 15px; transition: transform 0.3s; }
-  .game-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
-  .game-card .card-text h3 { font-size: 19px; margin-bottom: 5px; font-weight: 700; }
-  .game-card .card-text p { font-size: 13px; opacity: 0.8; }
+  .game-card:hover { transform: translateY(-5px) scale(1.03); }
+  
+  /* Ikon Gambar di dalam kartu */
+  .card-icon { 
+    width: 55px; height: 55px; margin-right: 15px;
+    display: flex; justify-content: center; align-items: center;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); 
+    transition: transform 0.3s; 
+  }
+  .card-icon img { width: 100%; height: 100%; object-fit: contain; }
+  .game-card:hover .card-icon { transform: scale(1.15) rotate(-10deg); }
+  
+  .game-card .card-text h3 { font-size: 19px; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.5px;}
+  .game-card .card-text p { font-size: 12px; opacity: 0.9; }
 
   /* Warna & Efek Glow Tiap Kartu */
   .card-sd { 
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); 
-    border: 1px solid #764ba2; 
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.4)); 
+    border: 2px solid #8B5CF6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
   }
-  .card-sd:hover { background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.4)); box-shadow: 0 10px 30px rgba(118, 75, 162, 0.4); }
+  .card-sd:hover { background: linear-gradient(135deg, rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.6)); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.6); }
 
   .card-smp { 
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.2), rgba(59, 130, 246, 0.2)); 
-    border: 1px solid #3B82F6; 
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(59, 130, 246, 0.4)); 
+    border: 2px solid #3B82F6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
   }
-  .card-smp:hover { background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(59, 130, 246, 0.4)); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4); }
+  .card-smp:hover { background: linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(59, 130, 246, 0.6)); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6); }
 
   .card-space { 
-    background: linear-gradient(135deg, rgba(9, 10, 15, 0.8), rgba(27, 39, 53, 0.8)); 
-    border: 1px solid #10B981; 
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3)); 
+    border: 2px solid #10B981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
   }
-  .card-space:hover { background: linear-gradient(135deg, rgba(9, 10, 15, 0.9), rgba(27, 39, 53, 0.9)); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); }
+  .card-space:hover { background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.5)); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.6); }
 </style>
 </head>
 <body>
@@ -103,7 +114,7 @@
   
   <!-- LAYAR LOGIN -->
   <div id="loginBox">
-    <h1>🌟 EduMath Universe</h1>
+    <h1>🌌 EduMath Universe</h1>
     <p class="subtitle">Masuk untuk memulai petualangan</p>
     <input id="nameInput" type="text" placeholder="Masukkan Nama Kamu..." maxlength="15">
     <button class="btn-login" onclick="login()">Masuk 🚀</button>
@@ -114,28 +125,31 @@
     <h1>EduMath Universe</h1>
     <p class="subtitle">Pilih Petualanganmu:</p>
     <div class="user-badge">
-      👤 <span id="userNameDisplay" style="color:#fff; cursor:default; margin:0;"></span>
+      👨‍🚀 <span id="userNameDisplay" style="color:#fff; cursor:default; margin:0;"></span>
       <span class="close" onclick="logout()" title="Ganti Pemain">✖</span>
     </div>
     
+    <!-- KARTU SD -->
     <a href="sd.html" class="game-card card-sd">
-      <div class="card-icon">🧮</div>
+      <div class="card-icon"><img src="icon-sd.png" alt="SD"></div>
       <div class="card-text">
         <h3>Petualangan SD</h3>
         <p>Kurikulum Merdeka Kelas 1-6</p>
       </div>
     </a>
     
+    <!-- KARTU SMP -->
     <a href="smp.html" class="game-card card-smp">
-      <div class="card-icon">📐</div>
+      <div class="card-icon"><img src="icon-smp.png" alt="SMP"></div>
       <div class="card-text">
         <h3>Petualangan SMP</h3>
         <p>Aljabar, Geometri Kelas 7-9</p>
       </div>
     </a>
     
+    <!-- KARTU SPACE -->
     <a href="space.html" class="game-card card-space">
-      <div class="card-icon">🚀</div>
+      <div class="card-icon"><img src="icon-space.png" alt="Space Math"></div>
       <div class="card-text">
         <h3>Space Math</h3>
         <p>Kecepatan Perkalian & Pembagian</p>
