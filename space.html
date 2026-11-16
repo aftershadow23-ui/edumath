@@ -35,11 +35,14 @@
   .ufo-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
   .ufo-box { background: rgba(59, 130, 246, 0.2); border: 1px solid #60A5FA; border-radius: 8px; padding: 4px 8px; font-size: 14px; letter-spacing: 1px; display: flex; align-items: center; }
   .ufo-box span { font-size: 16px; margin-left: 4px; }
-  .math-vertical { font-family: 'Share Tech Mono', monospace; font-size: 32px; line-height: 1.2; text-align: right; display: inline-block; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed #475569; color: #fff; text-shadow: 0 0 5px #fff; min-width: 160px; }
+  
+  /* CSS Bersusun */
+  .math-vertical { font-family: 'Share Tech Mono', monospace; font-size: 32px; line-height: 1.2; text-align: right; display: inline-block; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed #475569; color: #fff; text-shadow: 0 0 5px #fff; min-width: 180px; }
   .math-line { border-bottom: 2px solid #60A5FA; margin: 5px 0; padding-bottom: 5px; }
   .math-step { opacity: 0.3; transition: opacity 0.3s; }
   .math-step.active { opacity: 1; color: #FBBF24; text-shadow: 0 0 10px #FBBF24; }
   .math-step.done { opacity: 1; color: #10B981; }
+  
   .porogapit-box { font-family: 'Share Tech Mono', monospace; font-size: 28px; color: #fff; display: inline-block; text-align: left; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed #475569; }
   .pg-row { display: flex; align-items: flex-end; margin-bottom: 5px; }
   .pg-bracket { border-left: 2px solid #60A5FA; border-top: 2px solid #60A5FA; border-top-left-radius: 10px; padding: 5px 15px; margin-left: 10px; }
@@ -240,9 +243,21 @@ function nextQuestion() {
       for (let i=0; i<q.a; i++) html += `<div class="ufo-box">🛸 <span>${'👽'.repeat(q.b)}</span></div>`;
       html += `</div>`; qArea.innerHTML = html;
     } else if (currentLevel === 'intermediate') {
-      const step1 = q.a * (q.b % 10); const step2 = q.a * Math.floor(q.b/10) * 10; const total = q.ans;
+      const step1 = q.a * (q.b % 10); 
+      const step2 = q.a * Math.floor(q.b/10) * 10; 
+      const total = q.ans;
       currentQuestion = { a: q.a, b: q.b, step1, step2, total, answer: String(total), text: `${q.a} × ${q.b}` };
-      qArea.innerHTML = `<div class="math-vertical"><div>${q.a}</div><div class="math-line">× ${q.b}</div><div class="math-step active" id="ms1">?</div><div class="math-step" id="ms2">?</div><div class="math-line math-step" id="ms3">+</div><div class="math-step" id="ms4">?</div></div>`;
+      
+      qArea.innerHTML = `
+        <div class="math-vertical" style="min-width: 180px;">
+          <div>${q.a}</div>
+          <div class="math-line">× ${q.b}</div>
+          <div class="math-step active" id="ms1" style="color:#FBBF24;">?</div>
+          <div class="math-step" id="ms2" style="padding-right: 15px;">?</div>
+          <div class="math-line math-step" id="ms3" style="padding-right: 15px;">+</div>
+          <div class="math-step" id="ms4">?</div>
+        </div>
+      `;
       updateIntermediateStep();
     } else {
       currentQuestion = { text: `${q.a} × ${q.b}`, answer: String(q.ans) };
@@ -283,9 +298,13 @@ function nextQuestion() {
 
 function updateIntermediateStep() {
   const instEl = document.getElementById('instructionEl');
-  if (stepIndex === 0) instEl.textContent = `Langkah 1: Hitung ${currentQuestion.a} × ${currentQuestion.b % 10}`;
-  else if (stepIndex === 1) instEl.textContent = `Langkah 2: Hitung ${currentQuestion.a} × ${Math.floor(currentQuestion.b/10)}`;
-  else if (stepIndex === 2) instEl.textContent = `Langkah 3: Jumlahkan hasilnya`;
+  if (stepIndex === 0) {
+    instEl.textContent = `Langkah 1: Hitung ${currentQuestion.a} × ${currentQuestion.b % 10} = ?`;
+  } else if (stepIndex === 1) {
+    instEl.textContent = `Langkah 2: Hitung ${currentQuestion.a} × ${Math.floor(currentQuestion.b/10) * 10} = ?`;
+  } else if (stepIndex === 2) {
+    instEl.textContent = `Langkah 3: Jumlahkan ${currentQuestion.step1} + ${currentQuestion.step2} = ?`;
+  }
 }
 function updatePorogapitStep() {
   const instEl = document.getElementById('instructionEl');
@@ -298,14 +317,42 @@ function pressDel() { if (!isAnswering) return; typedAnswer = typedAnswer.slice(
 function submitAnswer() {
   if (!isAnswering || typedAnswer === '') return;
   let isCorrect = false, expected = "";
+  
   if (currentMode === 'kali' && currentLevel === 'intermediate') {
-    if (stepIndex === 0) expected = String(currentQuestion.step1); else if (stepIndex === 1) expected = String(currentQuestion.step2); else if (stepIndex === 2) expected = String(currentQuestion.total);
+    if (stepIndex === 0) expected = String(currentQuestion.step1); 
+    else if (stepIndex === 1) expected = String(currentQuestion.step2); 
+    else if (stepIndex === 2) expected = String(currentQuestion.total);
+    
     isCorrect = (typedAnswer === expected);
+    
     if (isCorrect) {
-      if (stepIndex === 0) { document.getElementById('ms1').className = 'math-step done'; document.getElementById('ms2').className = 'math-step active'; stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; }
-      else if (stepIndex === 1) { document.getElementById('ms2').className = 'math-step done'; document.getElementById('ms3').className = 'math-line math-step done'; document.getElementById('ms4').className = 'math-step active'; stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; }
-      else { document.getElementById('ms4').className = 'math-step done'; document.getElementById('ms4').style.color = '#10B981'; finishQuestion(true); return; }
-    } else { failQuestion(expected); return; }
+      if (stepIndex === 0) { 
+        const el1 = document.getElementById('ms1');
+        el1.textContent = expected; 
+        el1.className = 'math-step done';
+        
+        document.getElementById('ms2').className = 'math-step active'; 
+        stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; 
+      } 
+      else if (stepIndex === 1) { 
+        const el2 = document.getElementById('ms2');
+        el2.textContent = expected; 
+        el2.className = 'math-step done';
+        
+        document.getElementById('ms3').className = 'math-line math-step done'; 
+        document.getElementById('ms4').className = 'math-step active'; 
+        stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; 
+      } 
+      else { 
+        const el4 = document.getElementById('ms4');
+        el4.textContent = expected;
+        el4.className = 'math-step done'; 
+        el4.style.color = '#10B981'; 
+        finishQuestion(true); return; 
+      }
+    } else { 
+      failQuestion(expected); return; 
+    }
   }
   else if (currentMode === 'bagi' && currentLevel === 'advanced') {
     if (stepIndex === 0) expected = String(currentQuestion.step1); else if (stepIndex === 1) expected = String(currentQuestion.step2);
