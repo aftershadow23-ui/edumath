@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduMath Universe</title>
+<meta name="theme-color" content="#1E293B">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Comic+Sans+MS&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    min-height: 100vh; display: flex; padding: 20px; color: #fff;
+  }
+  .container {
+    margin: auto; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+    border: 1px solid #334155; border-radius: 24px; padding: 30px;
+    max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  h1 { font-family: 'Orbitron', sans-serif; color: #60A5FA; font-size: 24px; margin-bottom: 5px; }
+  .subtitle { color: #94A3B8; font-size: 13px; margin-bottom: 25px; }
+  
+  /* LOGIN BOX */
+  #loginBox input {
+    width: 100%; padding: 14px; font-size: 16px; border-radius: 12px;
+    border: 2px solid #475569; background: #0f172a; color: #fff;
+    margin-bottom: 12px; outline: none; text-align: center; font-weight: bold;
+  }
+  #loginBox input:focus { border-color: #60A5FA; }
+  .btn-login {
+    width: 100%; padding: 14px; font-size: 16px; font-weight: bold;
+    background: #3B82F6; color: #fff; border: none; border-radius: 12px; cursor: pointer;
+  }
+  .btn-login:hover { background: #2563EB; }
+
+  /* MENU BOX */
+  #menuBox { display: none; }
+  .user-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #1e293b; padding: 8px 16px; border-radius: 20px;
+    font-weight: bold; color: #60A5FA; margin-bottom: 20px; border: 1px solid #334155;
+  }
+  .user-badge span { cursor: pointer; color: #ef4444; font-size: 12px; margin-left: 10px; }
+  
+  .game-card {
+    display: flex; align-items: center; text-align: left;
+    padding: 20px; border-radius: 16px; margin-bottom: 15px;
+    cursor: pointer; text-decoration: none; color: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .game-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+  
+  .card-sd { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .card-smp { background: linear-gradient(135deg, #1E3A8A, #3B82F6); }
+  .card-space { background: linear-gradient(135deg, #090a0f, #1b2735); border: 1px solid #3B82F6; }
+  
+  .card-icon { font-size: 36px; margin-right: 15px; }
+  .card-text h3 { font-size: 18px; margin-bottom: 4px; }
+  .card-text p { font-size: 12px; opacity: 0.8; }
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <!-- LAYAR LOGIN -->
+  <div id="loginBox">
+    <h1>🌟 EduMath Universe</h1>
+    <p class="subtitle">Masuk untuk memulai petualangan</p>
+    <input id="nameInput" type="text" placeholder="Masukkan Nama Kamu..." maxlength="15">
+    <button class="btn-login" onclick="login()">Masuk 🚀</button>
+  </div>
+
+  <!-- LAYAR MENU -->
+  <div id="menuBox">
+    <h1>EduMath Universe</h1>
+    <p class="subtitle">Pilih Petualanganmu:</p>
+    <div class="user-badge" id="userBadge">
+      👤 <span id="userNameDisplay" style="color:#fff; cursor:default; margin:0;"></span>
+      <span onclick="logout()" title="Ganti Pemain">✖</span>
+    </div>
+    
+    <a href="sd.html" class="game-card card-sd">
+      <div class="card-icon">🧮</div>
+      <div class="card-text">
+        <h3>Petualangan SD</h3>
+        <p>Kurikulum Merdeka Kelas 1-6</p>
+      </div>
+    </a>
+    
+    <a href="smp.html" class="game-card card-smp">
+      <div class="card-icon">📐</div>
+      <div class="card-text">
+        <h3>Petualangan SMP</h3>
+        <p>Aljabar, Geometri Kelas 7-9</p>
+      </div>
+    </a>
+    
+    <a href="space.html" class="game-card card-space">
+      <div class="card-icon">🚀</div>
+      <div class="card-text">
+        <h3>Space Math</h3>
+        <p>Kecepatan Perkalian & Pembagian</p>
+      </div>
+    </a>
+  </div>
+  
+</div>
+
+<script>
+  // Cek apakah sudah login
+  function checkLogin() {
+    const user = localStorage.getItem('edumath_user');
+    if (user) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('menuBox').style.display = 'block';
+      document.getElementById('userNameDisplay').textContent = user;
+    } else {
+      document.getElementById('loginBox').style.display = 'block';
+      document.getElementById('menuBox').style.display = 'none';
+    }
+  }
+
+  function login() {
+    const name = document.getElementById('nameInput').value.trim();
+    if (name.length < 2) return alert('Nama minimal 2 huruf ya!');
+    localStorage.setItem('edumath_user', name);
+    document.getElementById('nameInput').value = '';
+    checkLogin();
+  }
+
+  function logout() {
+    if (confirm('Yakin ingin keluar dan ganti pemain?')) {
+      localStorage.removeItem('edumath_user');
+      checkLogin();
+    }
+  }
+
+  // Daftarkan Service Worker (PWA)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  // Jalankan saat halaman dimuat
+  checkLogin();
+</script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Space Math - EduMath</title>
+<meta name="theme-color" content="#090a0f">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body { font-family: 'Orbitron', sans-serif; background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%); min-height: 100vh; display: flex; padding: 10px; color: #fff; overflow: hidden; }
+  body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)); background-repeat: repeat; background-size: 200px 200px; opacity: 0.3; z-index: -1; }
+  .container { margin: auto; background: rgba(15, 23, 42, 0.9); border: 2px solid #3B82F6; border-radius: 20px; padding: 20px; max-width: 420px; width: 100%; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); text-align: center; position: relative; backdrop-filter: blur(10px); }
+  h1 { color: #60A5FA; font-size: 22px; margin-bottom: 5px; text-shadow: 0 0 10px #3B82F6; }
+  .subtitle { color: #94A3B8; font-size: 12px; margin-bottom: 20px; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .hidden { display: none !important; }
+  button.btn { padding: 14px 24px; font-size: 15px; font-family: inherit; background: #3B82F6; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: block; }
+  button.btn:hover { background: #2563EB; box-shadow: 0 0 15px #3B82F6; }
+  button.btn.secondary { background: transparent; border: 2px solid #475569; color: #94A3B8; }
+  button.btn.secondary:hover { background: #1e293b; box-shadow: none; color: #fff; border-color: #60A5FA; }
+  .menu-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .menu-btn { padding: 16px; font-family: inherit; font-size: 15px; font-weight: bold; border: 2px solid #3B82F6; background: rgba(30, 58, 138, 0.3); color: #60A5FA; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+  .menu-btn:hover { background: #3B82F6; color: #fff; box-shadow: 0 0 15px #3B82F6; transform: scale(1.02); }
+  .menu-btn small { display: block; font-size: 11px; font-weight: normal; opacity: 0.8; margin-top: 4px;}
+  .menu-btn .best { font-size: 12px; color: #FBBF24; }
+  .menu-btn:hover .best { color: #fff; }
+  .game-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #60A5FA; margin-bottom: 10px; }
+  .progress-bar { height: 6px; background: #334155; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #10B981; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px #10B981; }
+  .question-area { min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; }
+  .ufo-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
+  .ufo-box { background: rgba(59, 130, 246, 0.2); border: 1px solid #60A5FA; border-radius: 8px; padding: 4px 8px; font-size: 14px; letter-spacing: 1px; display: flex; align-items: center; }
+  .ufo-box span { font-size: 16px; margin-left: 4px; }
+  .math-vertical { font-family: 'Share Tech Mono', monospace; font-size: 32px; line-height: 1.2; text-align: right; display: inline-block; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed #475569; color: #fff; text-shadow: 0 0 5px #fff; min-width: 160px; }
+  .math-line { border-bottom: 2px solid #60A5FA; margin: 5px 0; padding-bottom: 5px; }
+  .math-step { opacity: 0.3; transition: opacity 0.3s; }
+  .math-step.active { opacity: 1; color: #FBBF24; text-shadow: 0 0 10px #FBBF24; }
+  .math-step.done { opacity: 1; color: #10B981; }
+  .porogapit-box { font-family: 'Share Tech Mono', monospace; font-size: 28px; color: #fff; display: inline-block; text-align: left; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed #475569; }
+  .pg-row { display: flex; align-items: flex-end; margin-bottom: 5px; }
+  .pg-bracket { border-left: 2px solid #60A5FA; border-top: 2px solid #60A5FA; border-top-left-radius: 10px; padding: 5px 15px; margin-left: 10px; }
+  .instruction { font-size: 13px; color: #FBBF24; margin-bottom: 10px; height: 20px; }
+  .answer-display { font-size: 28px; font-weight: bold; color: #10B981; min-height: 40px; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 2px dashed #475569; display: inline-block; min-width: 100px; font-family: 'Share Tech Mono', monospace; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .key { background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 10px; padding: 12px; font-size: 22px; font-weight: bold; font-family: 'Share Tech Mono', monospace; cursor: pointer; transition: all 0.1s; }
+  .key:active { transform: scale(0.95); background: #334155; }
+  .key.action { background: #3B82F6; border-color: #60A5FA; color: #fff; font-size: 16px; font-family: inherit;}
+  .key.action:active { background: #2563EB; }
+  .key.del { background: #EF4444; border-color: #F87171; color: #fff; font-size: 18px; }
+  .feedback { font-size: 16px; font-weight: bold; height: 25px; margin-top: 10px; font-family: inherit;}
+  .feedback.good { color: #10B981; text-shadow: 0 0 10px #10B981; }
+  .feedback.bad { color: #EF4444; text-shadow: 0 0 10px #EF4444; }
+  .result-box { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+  .result-box p { font-size: 13px; color: #94A3B8; margin-bottom: 5px; }
+  .result-box strong { font-size: 22px; color: #60A5FA; display: block; margin-top: 5px; font-family: 'Share Tech Mono', monospace;}
+  .result-box .big-score { font-size: 36px; color: #FBBF24; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="mainMenuScreen" class="screen active">
+    <h1 id="greetName">Halo, Astronot!</h1>
+    <p class="subtitle">Pilih Misi Matematika:</p>
+    <div class="menu-grid">
+      <button class="menu-btn" style="border-color:#10B981; color:#10B981;" onclick="selectMode('kali')">
+        <div style="text-align:left;"><span style="font-size:18px;">✖️ PERKALIAN</span><small style="color:inherit;">Latihan hafalan & bersusun</small></div><div style="font-size:20px;">›</div>
+      </button>
+      <button class="menu-btn" style="border-color:#F59E0B; color:#F59E0B;" onclick="selectMode('bagi')">
+        <div style="text-align:left;"><span style="font-size:18px;">➗ PEMBAGIAN</span><small style="color:inherit;">Latihan porogapit & sisa</small></div><div style="font-size:20px;">›</div>
+      </button>
+    </div>
+    <button class="btn secondary" onclick="tampilkanLeaderboard()">🏆 Peringkat Global</button>
+    <a href="index.html" class="btn secondary" style="margin-top:5px; border:none; font-size:12px;">⬅️ Kembali ke Lobi</a>
+    <div id="leaderboardArea" class="hidden" style="margin-top:20px; text-align:left;">
+      <h2 style="font-size:16px; color:#60A5FA; margin-bottom:10px;">🏆 Peringkat Global</h2>
+      <div id="leaderboardList" style="max-height: 200px; overflow-y: auto; font-size: 13px;"></div>
+      <button class="btn secondary" onclick="document.getElementById('leaderboardArea').classList.add('hidden')" style="margin-top:10px; padding:8px; font-size:12px;">Tutup</button>
+    </div>
+  </div>
+  <div id="levelScreen" class="screen">
+    <h1 id="levelTitle">Pilih Level</h1>
+    <p class="subtitle">Tingkat kesulitan:</p>
+    <div class="menu-grid" id="levelGrid"></div>
+    <button class="btn secondary" onclick="showMainMenu()">⬅️ Kembali</button>
+  </div>
+  <div id="gameScreen" class="screen">
+    <div class="game-header">
+      <span id="scoreEl">Skor: 0</span>
+      <span id="timerEl" style="color:#FBBF24;">⏱️ 0.0s</span>
+      <span id="qNumEl">1/10</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="question-area" id="questionArea"></div>
+    <div class="instruction" id="instructionEl"></div>
+    <div class="answer-display" id="answerEl">_</div>
+    <div class="keypad">
+      <button class="key" onclick="pressNum('1')">1</button>
+      <button class="key" onclick="pressNum('2')">2</button>
+      <button class="key" onclick="pressNum('3')">3</button>
+      <button class="key" onclick="pressNum('4')">4</button>
+      <button class="key" onclick="pressNum('5')">5</button>
+      <button class="key" onclick="pressNum('6')">6</button>
+      <button class="key" onclick="pressNum('7')">7</button>
+      <button class="key" onclick="pressNum('8')">8</button>
+      <button class="key" onclick="pressNum('9')">9</button>
+      <button class="key del" onclick="pressDel()">⌫</button>
+      <button class="key" onclick="pressNum('0')">0</button>
+      <button class="key action" onclick="submitAnswer()">OK</button>
+    </div>
+    <div class="feedback" id="feedbackEl"></div>
+  </div>
+  <div id="gameOverScreen" class="screen">
+    <h1>Misi Selesai! 🛸</h1>
+    <div class="result-box">
+      <p>Total Skor</p><strong id="finalScore" class="big-score">0</strong>
+      <p style="margin-top:15px;">Waktu Misi</p><strong id="finalTime" style="color:#10B981;">0.0 detik</strong>
+      <p style="margin-top:15px;">Jawaban Benar</p><strong id="finalCorrect">0 / 10</strong>
+      <p id="submitStatus" style="font-size:11px; margin-top:15px; color:#64748B;"></p>
+    </div>
+    <button class="btn" onclick="playAgain()">Coba Lagi 🔄</button>
+    <button class="btn secondary" onclick="showMainMenu()">Kembali ke Menu</button>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyCrq45ttIkoQ0y8VWvL0rt-_kvATooS00KBd6NZ7xM-BvnNGGSa98gEsF-ULucKN60/exec';
+const globalUser = localStorage.getItem('edumath_user');
+if (!globalUser) { window.location.href = 'index.html'; }
+
+let DB = { users: {}, currentUser: globalUser };
+let currentMode = 'kali', currentLevel = 'beginner';
+let score = 0, questionIndex = 0, correctCount = 0;
+let currentQuestion = null, stepIndex = 0, typedAnswer = '', isAnswering = false;
+let startTime = 0, timerInterval = null, totalTime = 0;
+const TOTAL_QUESTIONS = 10;
+
+function saveDB() { localStorage.setItem('spaceMath_v5', JSON.stringify(DB)); }
+function loadDB() {
+  try { const d = localStorage.getItem('spaceMath_v5'); if (d) DB = JSON.parse(d); } catch(e) {}
+  if (!DB.users) DB.users = {};
+  if (!DB.users[globalUser]) DB.users[globalUser] = { stats: {}, totalGames: 0 };
+}
+const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function showMainMenu() {
+  document.getElementById('greetName').textContent = `Halo, ${globalUser}!`;
+  document.getElementById('leaderboardArea').classList.add('hidden'); showScreen('mainMenuScreen');
+}
+function selectMode(mode) {
+  currentMode = mode; const title = mode === 'kali' ? '✖️ MISI PERKALIAN' : '➗ MISI PEMBAGIAN';
+  document.getElementById('levelTitle').textContent = title;
+  const user = DB.users[globalUser]; const grid = document.getElementById('levelGrid'); grid.innerHTML = '';
+  const levels = [
+    { id: 'beginner', name: 'Kadet', emoji: '🛰️', desc: mode === 'kali' ? 'Visual Perkalian 1-5' : 'Visual Pembagian 1-5', color: '#10B981' },
+    { id: 'intermediate', name: 'Pilot', emoji: '🚀', desc: mode === 'kali' ? 'Perkalian Bersusun 2 Digit' : 'Pembagian Susun 2 Digit', color: '#F59E0B' },
+    { id: 'advanced', name: 'Kapten', emoji: '👽', desc: mode === 'kali' ? 'Perkalian 3 Digit' : 'Porogapit (Sisa)', color: '#EF4444' }
+  ];
+  levels.forEach(l => {
+    const statKey = `${mode}-${l.id}`; const stat = user.stats[statKey];
+    const bestHtml = stat ? `<div class="best">⭐ Rekor: ${stat.best}</div>` : '';
+    const btn = document.createElement('button'); btn.className = 'menu-btn';
+    btn.style.borderColor = l.color; btn.style.color = l.color;
+    btn.onmouseover = () => { btn.style.background = l.color; btn.style.color = '#fff'; };
+    btn.onmouseout = () => { btn.style.background = 'rgba(30, 58, 138, 0.3)'; btn.style.color = l.color; };
+    btn.innerHTML = `<div style="text-align:left;"><span style="font-size:16px;">${l.emoji} ${l.name}</span><small style="color:inherit; opacity:0.8;">${l.desc}</small>${bestHtml}</div><div style="font-size:20px;">›</div>`;
+    btn.onclick = () => startGame(l.id); grid.appendChild(btn);
+  });
+  showScreen('levelScreen');
+}
+
+function startGame(levelId) {
+  currentLevel = levelId; score = 0; questionIndex = 0; correctCount = 0; totalTime = 0;
+  showScreen('gameScreen'); nextQuestion();
+}
+function nextQuestion() {
+  if (questionIndex >= TOTAL_QUESTIONS) return endGame();
+  isAnswering = true; typedAnswer = ''; stepIndex = 0;
+  document.getElementById('answerEl').textContent = '_'; document.getElementById('feedbackEl').textContent = '';
+  const qArea = document.getElementById('questionArea'); const instEl = document.getElementById('instructionEl'); qArea.innerHTML = ''; instEl.textContent = '';
+  const r = Math.random();
+  
+  if (currentMode === 'kali') {
+    if (currentLevel === 'beginner') {
+      const a = randInt(1, 5); const b = randInt(1, 5); const answer = a * b;
+      currentQuestion = { text: `${a} × ${b} = ?`, answer: String(answer) };
+      instEl.textContent = `Ada ${a} UFO, tiap UFO isi ${b} alien. Total alien?`;
+      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${a} × ${b} = ?</div><div class="ufo-grid">`;
+      for (let i=0; i<a; i++) html += `<div class="ufo-box">🛸 <span>${'👽'.repeat(b)}</span></div>`;
+      html += `</div>`; qArea.innerHTML = html;
+    } else if (currentLevel === 'intermediate') {
+      const a = randInt(12, 49); const b = randInt(11, 29);
+      const step1 = a * (b % 10); const step2 = a * Math.floor(b/10) * 10; const total = a * b;
+      currentQuestion = { a, b, step1, step2, total, answer: String(total), text: `${a} × ${b}` };
+      qArea.innerHTML = `<div class="math-vertical"><div>${a}</div><div class="math-line">× ${b}</div><div class="math-step active" id="ms1">?</div><div class="math-step" id="ms2">?</div><div class="math-line math-step" id="ms3">+</div><div class="math-step" id="ms4">?</div></div>`;
+      updateIntermediateStep();
+    } else {
+      const a = randInt(101, 299); const b = randInt(3, 9); const total = a * b;
+      currentQuestion = { text: `${a} × ${b}`, answer: String(total) };
+      instEl.textContent = `Hitung perkalian:`;
+      qArea.innerHTML = `<div class="math-vertical" style="min-width: 180px;"><div>${a}</div><div class="math-line">× &nbsp;&nbsp;${b}</div><div class="math-step active" style="color:#FBBF24;">?</div></div>`;
+    }
+  } else {
+    if (currentLevel === 'beginner') {
+      const b = randInt(1, 5); const answer = randInt(1, 5); const a = b * answer;
+      currentQuestion = { text: `${a} ÷ ${b} = ?`, answer: String(answer) };
+      instEl.textContent = `Ada ${a} alien dibagi ke ${b} UFO. Tiap UFO isi berapa?`;
+      let html = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${a} ÷ ${b} = ?</div><div class="ufo-grid">`;
+      html += `<div class="ufo-box" style="font-size:20px;">${'👽'.repeat(a)}</div>`;
+      html += `<div style="width:100%; font-size:20px; margin: 5px 0;">⬇️ dibagi ${b} UFO ⬇️</div>`;
+      for (let i=0; i<b; i++) html += `<div class="ufo-box">🛸 <span>?</span></div>`;
+      html += `</div>`; qArea.innerHTML = html;
+    } else if (currentLevel === 'intermediate') {
+      const pembagi = randInt(2, 9); const hasil = randInt(11, 30); const dibagi = pembagi * hasil;
+      currentQuestion = { text: `${dibagi} ÷ ${pembagi}`, answer: String(hasil) };
+      instEl.textContent = `Hitung hasil pembagian:`;
+      qArea.innerHTML = `<div class="porogapit-box"><div class="pg-row"><div style="padding-top: 25px;">${pembagi}</div><div class="pg-bracket">${dibagi}</div></div></div>`;
+    } else { 
+      const pembagi = randInt(3, 9); const hasil = randInt(12, 49); const dibagi = pembagi * hasil;
+      const d1 = Math.floor(dibagi / 10); const d2 = dibagi % 10;
+      const step1 = Math.floor(d1 / pembagi); const sisa1 = d1 % pembagi;
+      const turun = (sisa1 * 10) + d2; const step2 = Math.floor(turun / pembagi);
+      currentQuestion = { pembagi, dibagi, d1, d2, step1, sisa1, turun, step2, answer: String(hasil) };
+      qArea.innerHTML = `<div class="porogapit-box" style="min-width: 180px;"><div class="pg-row" style="justify-content: flex-end; padding-right:10px;"><div style="color:#FBBF24;" id="pg-q1">?</div><div style="color:#FBBF24; margin-left:10px;" id="pg-q2">?</div></div><div class="pg-row"><div style="padding-top: 5px;">${pembagi}</div><div class="pg-bracket" style="padding-left:20px;">${dibagi}</div></div></div>`;
+      updatePorogapitStep();
+    }
+  }
+  document.getElementById('qNumEl').textContent = `${questionIndex + 1}/${TOTAL_QUESTIONS}`;
+  document.getElementById('scoreEl').textContent = `Skor: ${score}`;
+  document.getElementById('progressFill').style.width = `${(questionIndex / TOTAL_QUESTIONS) * 100}%`;
+  if (questionIndex === 0) {
+    startTime = Date.now(); if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => { document.getElementById('timerEl').textContent = `⏱️ ${((Date.now() - startTime) / 1000).toFixed(1)}s`; }, 100);
+  }
+}
+function updateIntermediateStep() {
+  const instEl = document.getElementById('instructionEl');
+  if (stepIndex === 0) instEl.textContent = `Langkah 1: Hitung ${currentQuestion.a} × ${currentQuestion.b % 10}`;
+  else if (stepIndex === 1) instEl.textContent = `Langkah 2: Hitung ${currentQuestion.a} × ${Math.floor(currentQuestion.b/10)}`;
+  else if (stepIndex === 2) instEl.textContent = `Langkah 3: Jumlahkan hasilnya`;
+}
+function updatePorogapitStep() {
+  const instEl = document.getElementById('instructionEl');
+  if (stepIndex === 0) instEl.textContent = `Langkah 1: ${currentQuestion.d1} ÷ ${currentQuestion.pembagi} = ?`;
+  else if (stepIndex === 1) instEl.textContent = `Langkah 2: Turunkan angka ${currentQuestion.d2}. ${currentQuestion.turun} ÷ ${currentQuestion.pembagi} = ?`;
+}
+function pressNum(num) { if (!isAnswering) return; if (typedAnswer.length < 5) { typedAnswer += num; document.getElementById('answerEl').textContent = typedAnswer; } }
+function pressDel() { if (!isAnswering) return; typedAnswer = typedAnswer.slice(0, -1); document.getElementById('answerEl').textContent = typedAnswer || '_'; }
+
+function submitAnswer() {
+  if (!isAnswering || typedAnswer === '') return;
+  let isCorrect = false, expected = "";
+  if (currentMode === 'kali' && currentLevel === 'intermediate') {
+    if (stepIndex === 0) expected = String(currentQuestion.step1); else if (stepIndex === 1) expected = String(currentQuestion.step2); else if (stepIndex === 2) expected = String(currentQuestion.total);
+    isCorrect = (typedAnswer === expected);
+    if (isCorrect) {
+      if (stepIndex === 0) { document.getElementById('ms1').className = 'math-step done'; document.getElementById('ms2').className = 'math-step active'; stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; }
+      else if (stepIndex === 1) { document.getElementById('ms2').className = 'math-step done'; document.getElementById('ms3').className = 'math-line math-step done'; document.getElementById('ms4').className = 'math-step active'; stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updateIntermediateStep(); playSound(880); return; }
+      else { document.getElementById('ms4').className = 'math-step done'; document.getElementById('ms4').style.color = '#10B981'; finishQuestion(true); return; }
+    } else { failQuestion(expected); return; }
+  }
+  else if (currentMode === 'bagi' && currentLevel === 'advanced') {
+    if (stepIndex === 0) expected = String(currentQuestion.step1); else if (stepIndex === 1) expected = String(currentQuestion.step2);
+    isCorrect = (typedAnswer === expected);
+    if (isCorrect) {
+      if (stepIndex === 0) { document.getElementById('pg-q1').textContent = currentQuestion.step1; document.getElementById('pg-q1').style.color = '#10B981'; stepIndex++; typedAnswer = ''; document.getElementById('answerEl').textContent = '_'; updatePorogapitStep(); playSound(880); return; }
+      else { document.getElementById('pg-q2').textContent = currentQuestion.step2; document.getElementById('pg-q2').style.color = '#10B981'; finishQuestion(true); return; }
+    } else { failQuestion(expected); return; }
+  }
+  else { isCorrect = (typedAnswer === currentQuestion.answer); finishQuestion(isCorrect); }
+}
+function failQuestion(expected) {
+  playSound(220); document.getElementById('feedbackEl').textContent = `SALAH! Seharusnya ${expected}`; document.getElementById('feedbackEl').className = 'feedback bad';
+  setTimeout(() => finishQuestion(false), 2000);
+}
+function finishQuestion(isCorrect) {
+  isAnswering = false; const feedbackEl = document.getElementById('feedbackEl');
+  if (isCorrect) { correctCount++; const timeTaken = (Date.now() - startTime) / 1000; const speedBonus = Math.max(0, Math.floor(10 - timeTaken)); score += 10 + speedBonus; feedbackEl.textContent = `BENAR! +${10 + speedBonus} Poin`; feedbackEl.className = 'feedback good'; playSound(880); }
+  else { feedbackEl.textContent = `SALAH!`; feedbackEl.className = 'feedback bad'; playSound(220); }
+  document.getElementById('scoreEl').textContent = `Skor: ${score}`;
+  setTimeout(() => { questionIndex++; nextQuestion(); }, isCorrect ? 1000 : 2500);
+}
+function endGame() {
+  isAnswering = false; clearInterval(timerInterval); totalTime = (Date.now() - startTime) / 1000;
+  document.getElementById('finalScore').textContent = score; document.getElementById('finalTime').textContent = `${totalTime.toFixed(1)} detik`; document.getElementById('finalCorrect').textContent = `${correctCount} / ${TOTAL_QUESTIONS}`;
+  const user = DB.users[globalUser]; const statKey = `${currentMode}-${currentLevel}`;
+  if (!user.stats) user.stats = {}; if (!user.stats[statKey]) user.stats[statKey] = { best: 0 };
+  if (score > user.stats[statKey].best) user.stats[statKey].best = score;
+  user.totalGames = (user.totalGames || 0) + 1; saveDB();
+  const statusEl = document.getElementById('submitStatus'); statusEl.textContent = '⏳ Mengirim data misi...';
+  const modeName = currentMode === 'kali' ? 'Kali' : 'Bagi'; const levelName = currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1);
+  kirimSkorKeSheets(globalUser, `Space ${modeName} - ${levelName}`, score, totalTime, correctCount, (ok) => { statusEl.textContent = ok ? '✅ Data misi berhasil dikirim!' : '⚠️ Gagal mengirim data (offline).'; });
+  showScreen('gameOverScreen');
+}
+function playAgain() { startGame(currentLevel); }
+
+function kirimSkorKeSheets(nama, kelas, skor, waktu, benar, callback) {
+  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { if(callback) callback(false); return; }
+  const payload = JSON.stringify({ nama, kelas, skor, benar, waktu: waktu.toFixed(1), gameType: 'Space' });
+  fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload }).then(() => { if(callback) callback(true); }).catch(() => { if(callback) callback(false); });
+}
+function tampilkanLeaderboard() {
+  const area = document.getElementById('leaderboardArea'); const list = document.getElementById('leaderboardList');
+  area.classList.remove('hidden'); list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Memuat data...</p>';
+  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { list.innerHTML = '<p style="color:#EF4444;text-align:center;">API_URL belum diset.</p>'; return; }
+  fetch(`${API_URL}?limit=10&gameType=Space`).then(res => res.json()).then(data => {
+    if (!data || data.length === 0) { list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Belum ada data.</p>'; return; }
+    list.innerHTML = data.map((item, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+      return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #334155; padding:8px 0;"><div><span style="color:#FBBF24; margin-right:5px;">${medal}</span> <b>${escapeHtml(item.nama)}</b><br><small style="color:#94A3B8;">${escapeHtml(item.kelas)}</small></div><div style="color:#10B981; font-weight:bold; font-size:16px;">${item.skor}</div></div>`;
+    }).join('');
+  }).catch(() => { list.innerHTML = '<p style="color:#EF4444;text-align:center;">Gagal memuat data.</p>'; });
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function playSound(freq) {
+  try { if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = freq; osc.type = 'sine'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); } catch(e) {}
+}
+loadDB(); showMainMenu();
+</script>
+</body>
+</html>
