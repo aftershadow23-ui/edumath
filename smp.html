@@ -151,6 +151,7 @@ let DB = { users: {}, currentUser: globalUser };
 let currentClass = 7, currentLevel = 'beginner';
 let score = 0, questionIndex = 0, correctCount = 0;
 let currentQuestion = null, answerLocked = false, audioCtx;
+let sessionQuestions = []; // Bank Soal
 const TOTAL_QUESTIONS = 10;
 
 function saveDB() { localStorage.setItem('edumath_smp_stats', JSON.stringify(DB)); }
@@ -192,6 +193,7 @@ function showLevelSelection(classId) {
   showScreen('levelScreen');
 }
 
+// === GENERATOR SOAL SMP ===
 function genBeginner(c) {
   const r = Math.random();
   if (c === 7) { if (r < 0.4) { const a = randInt(-10, 20), b = randInt(-10, 20); return numQ(`${a} + (${b}) = ?`, a+b, `Operasi bilangan bulat:\n${a} + ${b} = ${a+b}`); } else if (r < 0.7) { const x = randInt(2, 10), a = randInt(2, 15); return numQ(`x + ${a} = ${x+a}, maka x = ?`, x, `x = ${x+a} - ${a} = ${x}`); } else { const k = randInt(2, 5); return numQ(`Perbandingan A : B = 2 : 3.\nJika A = ${2*k}, maka B = ?`, 3*k, `1 bagian = ${2*k} ÷ 2 = ${k}\nB = 3 × ${k} = ${3*k}`); } }
@@ -211,6 +213,25 @@ function genAdvanced(c) {
   else { if (r < 0.4) { const x = randInt(1, 5), y = randInt(1, 5); return numQ(`x + y = ${x+y}\nx − y = ${x-y}\nNilai x² + y² = ?`, x*x + y*y, `x = ${x}, y = ${y}\n${x}² + ${y}² = ${x*x} + ${y*y} = ${x*x+y*y}`); } else if (r < 0.7) { const a = randInt(2, 5), b = randInt(2, 5); return numQ(`Persamaan kuadrat x² − ${a+b}x + ${a*b} = 0 memiliki akar p dan q.\nNilai p + q = ?`, a+b, `Rumus jumlah akar: p + q = -b/a\np + q = ${a+b} / 1 = ${a+b}`); } else { const vTab = randInt(10, 20), tTab = randInt(10, 20), rKer = randInt(5, 10); return numQ(`Tabung (V=${vTab*10}) dan kerucut (r sama) memiliki tinggi sama.\nVolume kerucut = ?`, Math.round(vTab*10/3), `Volume kerucut = 1/3 × Volume Tabung\n= 1/3 × ${vTab*10} = ${Math.round(vTab*10/3)}`); } }
 }
 function generateQuestion(c, l) { if (l === 'beginner') return genBeginner(c); if (l === 'intermediate') return genIntermediate(c); if (l === 'advanced') return genAdvanced(c); return genBeginner(c); }
+
+// === SISTEM BANK SOAL (ANTI DUPLIKAT) ===
+function prepareQuestions(classId, levelId) {
+  const seenTexts = new Set();
+  sessionQuestions = [];
+  let attempts = 0;
+  while (sessionQuestions.length < 20 && attempts < 1000) {
+    attempts++;
+    const q = generateQuestion(classId, levelId);
+    if (!seenTexts.has(q.text)) {
+      seenTexts.add(q.text);
+      sessionQuestions.push(q);
+    }
+  }
+  for (let i = sessionQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sessionQuestions[i], sessionQuestions[j]] = [sessionQuestions[j], sessionQuestions[i]];
+  }
+}
 
 function generateNumericOptions(n) {
   const opts = new Set([String(n)]); const maxOff = Math.max(3, Math.ceil(Math.abs(n) * 0.25)); let t = 0;
@@ -232,6 +253,7 @@ function generateOptions(q) {
 
 function startGame(classId, levelId) {
   currentClass = classId; currentLevel = levelId; score = 0; questionIndex = 0; correctCount = 0;
+  prepareQuestions(classId, levelId);
   const user = DB.users[globalUser];
   document.getElementById('gAvatar').textContent = user.avatar;
   document.getElementById('gName').textContent = globalUser;
@@ -241,9 +263,12 @@ function startGame(classId, levelId) {
 function nextQuestion() {
   answerLocked = false; document.getElementById('feedbackEl').textContent = '';
   document.getElementById('feedbackEl').className = 'feedback'; document.getElementById('solutionBox').classList.add('hidden'); document.getElementById('nextBtn').classList.add('hidden');
-  currentQuestion = generateQuestion(currentClass, currentLevel);
+  
+  currentQuestion = sessionQuestions.pop();
+  
   const qEl = document.getElementById('questionEl'); qEl.textContent = currentQuestion.text; qEl.classList.remove('long', 'very-long');
   if (currentQuestion.text.length > 55) qEl.classList.add('very-long'); else if (currentQuestion.text.length > 30) qEl.classList.add('long');
+  
   const options = generateOptions(currentQuestion); const optEl = document.getElementById('optionsEl'); optEl.innerHTML = '';
   options.forEach(opt => {
     const btn = document.createElement('button'); btn.className = 'option';
