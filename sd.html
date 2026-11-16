@@ -41,7 +41,26 @@
   .stat span { display: block; font-size: 20px; font-weight: bold; color: #764ba2; }
   .progress-bar { height: 12px; background: #eee; border-radius: 10px; margin-bottom: 18px; overflow: hidden; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, #f093fb, #f5576c); width: 0%; border-radius: 10px; transition: width 0.4s ease; }
-  .question { font-size: 24px; font-weight: bold; color: #333; margin: 20px 0; min-height: 60px; line-height: 1.35; white-space: pre-line; word-wrap: break-word; }
+  
+  /* CSS UNTUK VISUAL SINGAPORE MATH */
+  .visual-area { display: flex; justify-content: center; align-items: center; min-height: 120px; margin-bottom: 15px; }
+  
+  /* Number Bond */
+  .number-bond { display: flex; flex-direction: column; align-items: center; font-family: monospace; font-size: 24px; font-weight: bold; color: #333; }
+  .bond-top { border: 3px solid #764ba2; border-radius: 50%; width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; background: #e0d4ff; }
+  .bond-bottom { display: flex; gap: 50px; margin-top: 20px; position: relative; }
+  .bond-bottom::before, .bond-bottom::after { content: ''; position: absolute; width: 3px; height: 35px; background: #764ba2; top: -35px; }
+  .bond-bottom::before { left: 32px; transform: rotate(35deg); }
+  .bond-bottom::after { right: 32px; transform: rotate(-35deg); }
+  .bond-item { border: 3px solid #764ba2; border-radius: 50%; width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; background: #fff; }
+  
+  /* Bar Model */
+  .bar-model-container { width: 100%; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; font-size: 14px; font-weight: bold; color: #333; }
+  .bar-row { display: flex; width: 90%; margin-bottom: 8px; }
+  .bar-box { border: 2px solid #764ba2; padding: 8px; background: #e0d4ff; color: #764ba2; text-align: center; flex: 1; margin: 0 2px; border-radius: 5px; font-size: 16px;}
+  .bar-total { border-top: 2px dashed #764ba2; padding-top: 5px; width: 90%; text-align: center; font-size: 18px; color: #f5576c; }
+
+  .question { font-size: 22px; font-weight: bold; color: #333; margin: 10px 0; min-height: 50px; line-height: 1.35; white-space: pre-line; word-wrap: break-word; }
   .question.long { font-size: 18px; }
   .question.very-long { font-size: 16px; }
   .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
@@ -120,6 +139,10 @@
       <div class="stat">Benar <span id="correctEl">0</span></div>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    
+    <!-- AREA VISUAL SINGAPORE MATH -->
+    <div class="visual-area" id="visualArea"></div>
+    
     <div class="question" id="questionEl">Memuat soal...</div>
     <div class="options" id="optionsEl"></div>
     <div class="feedback" id="feedbackEl"></div>
@@ -151,7 +174,7 @@ let DB = { users: {}, currentUser: globalUser };
 let currentClass = 1, currentLevel = 'beginner';
 let score = 0, questionIndex = 0, correctCount = 0;
 let currentQuestion = null, answerLocked = false, audioCtx;
-let sessionQuestions = []; // Bank Soal
+let sessionQuestions = []; 
 const TOTAL_QUESTIONS = 10;
 
 function saveDB() { localStorage.setItem('edumath_sd_stats', JSON.stringify(DB)); }
@@ -164,10 +187,10 @@ const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const gcd = (a, b) => b === 0 ? Math.abs(a) : gcd(b, a % b);
 function simplifyFrac(n, d) { const g = gcd(n, d); n /= g; d /= g; return d === 1 ? String(n) : `${n}/${d}`; }
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function numQ(t, a, s) { return { text: t, answer: String(a), type: 'numeric', solution: s || '' }; }
-function fracQ(t, n, d, s) { return { text: t, answer: simplifyFrac(n, d), type: 'fraction', solution: s || '' }; }
-function decQ(t, a, s) { return { text: t, answer: Number(a).toFixed(2), type: 'numeric_dec', solution: s || '' }; }
-function textQ(t, a, dist, s) { return { text: t, answer: a, type: 'text', distractors: dist, solution: s || '' }; }
+function numQ(t, a, s, v) { return { text: t, answer: String(a), type: 'numeric', solution: s || '', visual: v || '' }; }
+function fracQ(t, n, d, s, v) { return { text: t, answer: simplifyFrac(n, d), type: 'fraction', solution: s || '', visual: v || '' }; }
+function decQ(t, a, s, v) { return { text: t, answer: Number(a).toFixed(2), type: 'numeric_dec', solution: s || '', visual: v || '' }; }
+function textQ(t, a, dist, s, v) { return { text: t, answer: a, type: 'text', distractors: dist, solution: s || '', visual: v || '' }; }
 
 const CLASSES = [ { id: 1, desc: 'Bilangan 1-100, Pola, Bangun Dasar' }, { id: 2, desc: 'Operasi 100, Ukur, Bangun Ruang' }, { id: 3, desc: 'Kali & Bagi, Pecahan, Luas' }, { id: 4, desc: 'Bilangan 10.000, Data, Pecahan' }, { id: 5, desc: 'Pecahan, Desimal, KPK/FPB, Sudut' }, { id: 6, desc: 'Campuran, Luas Gabungan, Volume' } ];
 const LEVELS = [ { id: 'beginner', name: 'Beginner', emoji: '🟢', desc: 'Soal dasar & hitungan langsung' }, { id: 'intermediate', name: 'Intermediate', emoji: '🟡', desc: 'Soal 2 langkah & campuran' }, { id: 'advanced', name: 'Advanced', emoji: '🔴', desc: 'Soal cerita & penalaran' } ];
@@ -195,22 +218,53 @@ function showLevelSelection(classId) {
   showScreen('levelScreen');
 }
 
+// === GENERATOR VISUAL SINGAPORE MATH ===
+function buildNumberBond(whole, part1, part2) {
+  return `<div class="number-bond">
+    <div class="bond-top">${whole}</div>
+    <div class="bond-bottom">
+      <div class="bond-item">${part1}</div>
+      <div class="bond-item">${part2}</div>
+    </div>
+  </div>`;
+}
+
+function buildBarModel(parts, total) {
+  let html = `<div class="bar-model-container"><div class="bar-row">`;
+  parts.forEach(p => { html += `<div class="bar-box">${p}</div>`; });
+  html += `</div>`;
+  if(total) html += `<div class="bar-total">Total: ${total}</div>`;
+  html += `</div>`;
+  return html;
+}
+
 // === GENERATOR SOAL ===
 function genBeginner(c) {
   const r = Math.random();
-  if (c === 1) { if (r < 0.5) { const a = randInt(1, 10), b = randInt(1, 10); return numQ(`${a} + ${b} = ?`, a+b, `Tambahkan:\n${a} + ${b} = ${a+b}`); } else { const a = randInt(3, 20), b = randInt(1, a); return numQ(`${a} − ${b} = ?`, a-b, `Kurangkan:\n${a} - ${b} = ${a-b}`); } }
-  else if (c === 2) { if (r < 0.5) { const a = randInt(10, 50), b = randInt(10, 30); return numQ(`${a} + ${b} = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`); } else { const a = randInt(20, 99), b = randInt(10, a); return numQ(`${a} − ${b} = ?`, a-b, `Kurangkan:\n${a} - ${b} = ${a-b}`); } }
-  else if (c === 3) { if (r < 0.5) { const a = randInt(2, 10), b = randInt(2, 5); return numQ(`${a} × ${b} = ?`, a*b, `Perkalian:\n${a} × ${b} = ${a*b}`); } else { const b = randInt(2, 5), ans = randInt(2, 10); return numQ(`${b*ans} ÷ ${b} = ?`, ans, `Pembagian:\n${b} × ${ans} = ${b*ans}\nJadi ${b*ans} ÷ ${b} = ${ans}`); } }
+  if (c === 1) { 
+    if (r < 0.5) { const a = randInt(1, 10), b = randInt(1, 10); return numQ(`${a} + ${b} = ?`, a+b, `Tambahkan:\n${a} + ${b} = ${a+b}`, buildNumberBond('?', a, b)); } 
+    else { const a = randInt(3, 20), b = randInt(1, a); return numQ(`${a} − ${b} = ?`, a-b, `Kurangkan:\n${a} - ${b} = ${a-b}`, buildNumberBond(a, b, '?')); } 
+  }
+  else if (c === 2) { 
+    if (r < 0.5) { const a = randInt(10, 50), b = randInt(10, 30); return numQ(`${a} + ${b} = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`, buildNumberBond('?', a, b)); } 
+    else { const a = randInt(20, 99), b = randInt(10, a); return numQ(`${a} − ${b} = ?`, a-b, `Kurangkan:\n${a} - ${b} = ${a-b}`, buildNumberBond(a, b, '?')); } 
+  }
+  else if (c === 3) { 
+    if (r < 0.5) { const a = randInt(2, 10), b = randInt(2, 5); return numQ(`${a} × ${b} = ?`, a*b, `Perkalian:\n${a} × ${b} = ${a*b}`, buildBarModel([a, a, a, a].slice(0, b), a*b)); } 
+    else { const b = randInt(2, 5), ans = randInt(2, 10); return numQ(`${b*ans} ÷ ${b} = ?`, ans, `Pembagian:\n${b} × ${ans} = ${b*ans}`, buildBarModel([ans, ans, ans, ans, ans].slice(0, b), b*ans)); } 
+  }
   else if (c === 4) { if (r < 0.5) { const a = randInt(100, 500), b = randInt(100, 300); return numQ(`${a} + ${b} = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`); } else { const a = randInt(11, 20), b = randInt(2, 5); return numQ(`${a} × ${b} = ?`, a*b, `Perkalian:\n${a} × ${b} = ${a*b}`); } }
   else if (c === 5) { if (r < 0.5) { const d = randInt(3, 8); const a = randInt(1, d-1), b = randInt(1, d-1); return fracQ(`${a}/${d} + ${b}/${d} = ?`, a+b, d, `Penyebut sama (${d}):\n${a}/${d} + ${b}/${d} = ${a+b}/${d}`); } else { const a = randInt(11, 40), b = randInt(11, 40); const sum = (a+b)/10; return decQ(`${(a/10).toFixed(1)} + ${(b/10).toFixed(1)} = ?`, sum, `${(a/10).toFixed(1)} + ${(b/10).toFixed(1)} = ${sum.toFixed(2)}`); } }
   else { if (r < 0.5) { const a = randInt(2, 5), b = randInt(2, 10), c = randInt(1, 20); return numQ(`${a} × ${b} + ${c} = ?`, a*b+c, `Operasi campuran (kali dulu):\n(${a} × ${b}) + ${c}\n= ${a*b} + ${c} = ${a*b+c}`); } else { const p = [10, 20, 25, 50][randInt(0, 3)]; const base = randInt(2, 10) * 10; return numQ(`${p}% dari ${base} = ?`, p*base/100, `${p}% = ${p}/100\n${p}/100 × ${base} = ${p*base/100}`); } }
 }
 function genIntermediate(c) {
   const r = Math.random();
-  if (c === 1) { if (r < 0.5) { const a = randInt(10, 40), b = randInt(10, 40); return numQ(`${a} + ${b} = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`); } else { const step = randInt(2, 5), start = randInt(1, 5); return numQ(`Pola: ${start}, ${start+step}, ${start+step*2}, ...\nAngka ke-4 = ?`, start+step*3, `Pola bertambah ${step}:\n${start+step*2} + ${step} = ${start+step*3}`); } }
+  if (c === 1) { 
+    if (r < 0.5) { const a = randInt(10, 40), b = randInt(10, 40); return numQ(`${a} + ${b} = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`, buildBarModel([a, b], '?')); } 
+    else { const step = randInt(2, 5), start = randInt(1, 5); return numQ(`Pola: ${start}, ${start+step}, ${start+step*2}, ...\nAngka ke-4 = ?`, start+step*3, `Pola bertambah ${step}:\n${start+step*2} + ${step} = ${start+step*3}`); } 
+  }
   else if (c === 2) { 
-    // Perkalian 2 digit x 1 digit (lebih ramah anak kelas 2)
-    if (r < 0.5) { const a = randInt(11, 25), b = randInt(2, 5); return numQ(`${a} × ${b} = ?`, a*b, `Perkalian:\n${a} × ${b} = ${a*b}`); } 
+    if (r < 0.5) { const a = randInt(11, 25), b = randInt(2, 5); return numQ(`${a} × ${b} = ?`, a*b, `Perkalian:\n${a} × ${b} = ${a*b}`, buildBarModel([a, a, a, a, a].slice(0, b), '?')); } 
     else { const q = [ {q:'1 m = ... cm', a:'100', d:['10','1000','50'], s:'1 m = 100 cm'}, {q:'1 jam = ... menit', a:'60', d:['30','100','24'], s:'1 jam = 60 menit'}, {q:'1 kg = ... gram', a:'1000', d:['100','10','500'], s:'1 kg = 1000 gram'} ][randInt(0,2)]; return textQ(q.q, q.a, q.d, q.s); } 
   }
   else if (c === 3) { if (r < 0.5) { const x = randInt(2, 20), a = randInt(2, 20); return numQ(`□ + ${a} = ${x+a}, maka □ = ?`, x, `□ = ${x+a} - ${a} = ${x}`); } else { const s = randInt(3, 10); return numQ(`Persegi sisi ${s} cm.\nLuas = ... cm²`, s*s, `Luas = s × s = ${s} × ${s} = ${s*s}`); } }
@@ -222,10 +276,9 @@ function genAdvanced(c) {
   const r = Math.random();
   if (c === 1) { if (r < 0.5) { const a = randInt(2, 5); return textQ(`Bangun datar dengan ${a} sisi disebut...`, a===3?'Segitiga':a===4?'Persegi':'Lingkaran', ['Persegi Panjang','Trapesium','Oval'], `Bangun dengan ${a} sisi adalah ${a===3?'Segitiga':a===4?'Persegi':'Lingkaran'}.`); } else { const a = randInt(1, 15), b = randInt(1, 15); return textQ(`Manakah yang lebih besar? ${a} atau ${b}?`, a>b?String(a):String(b), [a>b?String(b):String(a), 'Sama besar', 'Tidak bisa ditentukan'], `Bandingkan: ${a} ${a>b?'>':'<'} ${b}`); } }
   else if (c === 2) { 
-    // Piktogram diganti dengan Soal Cerita
     if (r < 0.5) { 
       const a = randInt(100, 500), b = randInt(50, 200); 
-      return numQ(`Di gudang ada ${a} kotak.\nDatang lagi ${b} kotak.\nTotal kotak = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`); 
+      return numQ(`Di gudang ada ${a} kotak.\nDatang lagi ${b} kotak.\nTotal kotak = ?`, a+b, `Jumlahkan:\n${a} + ${b} = ${a+b}`, buildBarModel([a, b], '?')); 
     } else { 
       const q = [ 
         {q:'Kubus memiliki berapa sisi?', a:'6', d:['4','8','12'], s:'Kubus = 6 sisi'}, 
@@ -293,7 +346,7 @@ function generateOptions(q) {
 
 function startGame(classId, levelId) {
   currentClass = classId; currentLevel = levelId; score = 0; questionIndex = 0; correctCount = 0;
-  prepareQuestions(classId, levelId); // Siapkan Bank Soal Unik
+  prepareQuestions(classId, levelId);
   const user = DB.users[globalUser];
   document.getElementById('gAvatar').textContent = user.avatar;
   document.getElementById('gName').textContent = globalUser;
@@ -304,8 +357,18 @@ function nextQuestion() {
   answerLocked = false; document.getElementById('feedbackEl').textContent = '';
   document.getElementById('feedbackEl').className = 'feedback'; document.getElementById('solutionBox').classList.add('hidden'); document.getElementById('nextBtn').classList.add('hidden');
   
-  currentQuestion = sessionQuestions.pop(); // Ambil dari Bank Soal
+  currentQuestion = sessionQuestions.pop();
   
+  // TAMPILKAN VISUAL SINGAPORE MATH
+  const vArea = document.getElementById('visualArea');
+  if (currentQuestion.visual) {
+    vArea.innerHTML = currentQuestion.visual;
+    vArea.classList.remove('hidden');
+  } else {
+    vArea.innerHTML = '';
+    vArea.classList.add('hidden');
+  }
+
   const qEl = document.getElementById('questionEl'); qEl.textContent = currentQuestion.text; qEl.classList.remove('long', 'very-long');
   if (currentQuestion.text.length > 55) qEl.classList.add('very-long'); else if (currentQuestion.text.length > 30) qEl.classList.add('long');
   
