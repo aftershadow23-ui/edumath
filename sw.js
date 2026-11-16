@@ -1,4 +1,4 @@
-const CACHE_NAME = 'edumath-v6';
+const CACHE_NAME = 'edumath-v8';
 const ASSETS = [
   './', 
   './index.html', 
