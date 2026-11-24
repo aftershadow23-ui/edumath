@@ -6,6 +6,9 @@
 <title>Petualangan Matematika SMP - EduMath</title>
 <meta name="theme-color" content="#1E3A8A">
 <link rel="apple-touch-icon" href="icon-192.png">
+   .lb-filters { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+  .lb-filters button { padding: 6px 12px; border-radius: 20px; border: 1px solid #ccc; background: #fff; font-family: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .lb-filters button.active { background: #1E3A8A; color: #fff; border-color: #1E3A8A; }
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); min-height: 100vh; display: flex; padding: 20px; }
@@ -91,8 +94,15 @@
     <div class="menu-grid" id="classGrid"></div>
     <button class="btn" onclick="tampilkanLeaderboard()" style="background:linear-gradient(135deg,#F59E0B,#D97706); color:#fff; margin-bottom:8px;">🏆 Lihat Peringkat SMP</button>
     <a href="index.html" class="btn secondary">⬅️ Kembali ke Lobi</a>
-    <div id="leaderboardArea" class="hidden" style="margin-top:20px;">
+        <div id="leaderboardArea" class="hidden" style="margin-top:20px;">
       <h2 style="text-align:left;">🏆 Peringkat SMP</h2>
+      <!-- TOMBOL FILTER KELAS SMP -->
+      <div class="lb-filters">
+        <button class="active" onclick="muatLB('', this)">Semua</button>
+        <button onclick="muatLB('Kelas 7', this)">K7</button>
+        <button onclick="muatLB('Kelas 8', this)">K8</button>
+        <button onclick="muatLB('Kelas 9', this)">K9</button>
+      </div>
       <div id="leaderboardList" class="lb-list"></div>
       <button class="btn secondary" onclick="document.getElementById('leaderboardArea').classList.add('hidden')" style="font-size:13px;">Tutup</button>
     </div>
@@ -319,16 +329,41 @@ function kirimSkorKeSheets(nama, kelas, skor, benar, callback) {
   fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload }).then(() => { if(callback) callback(true); }).catch(() => { if(callback) callback(false); });
 }
 function tampilkanLeaderboard() {
-  const area = document.getElementById('leaderboardArea'); const list = document.getElementById('leaderboardList');
-  area.classList.remove('hidden'); list.innerHTML = '<p class="lb-empty">Memuat...</p>';
-  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { list.innerHTML = '<p class="lb-empty">API_URL belum diset.</p>'; return; }
-  fetch(`${API_URL}?limit=10&gameType=SMP`).then(res => res.json()).then(data => {
-    if (!data || data.length === 0) { list.innerHTML = '<p class="lb-empty">Belum ada data.</p>'; return; }
+  const area = document.getElementById('leaderboardArea');
+  area.classList.remove('hidden');
+  const firstBtn = area.querySelector('.lb-filters button');
+  muatLB('', firstBtn);
+}
+
+function muatLB(filterKelas, btnElement) {
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<p class="lb-empty">Memuat...</p>';
+  
+  if (btnElement) {
+    document.querySelectorAll('.lb-filters button').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+  }
+
+  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { 
+    list.innerHTML = '<p class="lb-empty">API_URL belum diset.</p>'; 
+    return; 
+  }
+
+  let url = `${API_URL}?limit=10&gameType=SMP`;
+  if (filterKelas) url += `&kelas=${encodeURIComponent(filterKelas)}`;
+
+  fetch(url).then(res => res.json()).then(data => {
+    if (!data || data.length === 0) { 
+      list.innerHTML = '<p class="lb-empty">Belum ada data untuk kelas ini.</p>'; 
+      return; 
+    }
     list.innerHTML = data.map((item, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
       return `<div class="lb-item"><div class="left"><span class="medal">${medal}</span><div><div class="name">${escapeHtml(item.nama)}</div><div class="kelas">${escapeHtml(item.kelas || '-')}</div></div></div><div class="score">${item.skor}</div></div>`;
     }).join('');
-  }).catch(() => { list.innerHTML = '<p class="lb-empty">Gagal memuat data.</p>'; });
+  }).catch(() => { 
+    list.innerHTML = '<p class="lb-empty">Gagal memuat data.</p>'; 
+  });
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function playSound(freq) {
