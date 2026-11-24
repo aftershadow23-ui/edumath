@@ -6,6 +6,15 @@
 <title>Space Math - EduMath</title>
 <meta name="theme-color" content="#090a0f">
 <link rel="apple-touch-icon" href="icon-192.png">
+  .lb-filters { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 8px; }
+  .lb-filters button { 
+    padding: 8px 12px; border-radius: 8px; border: 1px solid #475569; 
+    background: #0f172a; color: #94A3B8; font-family: 'Share Tech Mono', monospace; 
+    font-size: 12px; cursor: pointer; white-space: nowrap; transition: 0.2s;
+  }
+  .lb-filters button.active { 
+    background: #3B82F6; color: #fff; border-color: #60A5FA; box-shadow: 0 0 10px #3B82F6; 
+  }
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -78,8 +87,20 @@
     </div>
     <button class="btn secondary" onclick="tampilkanLeaderboard()">🏆 Peringkat Global</button>
     <a href="index.html" class="btn secondary" style="margin-top:5px; border:none; font-size:12px;">⬅️ Kembali ke Lobi</a>
-    <div id="leaderboardArea" class="hidden" style="margin-top:20px; text-align:left;">
+        <div id="leaderboardArea" class="hidden" style="margin-top:20px; text-align:left;">
       <h2 style="font-size:16px; color:#60A5FA; margin-bottom:10px;">🏆 Peringkat Global</h2>
+      
+      <!-- TOMBOL FILTER MODE & LEVEL -->
+      <div class="lb-filters">
+        <button class="active" onclick="muatLB('', this)">Semua</button>
+        <button onclick="muatLB('Space Kali - Kadet', this)">Kali - Kadet</button>
+        <button onclick="muatLB('Space Kali - Pilot', this)">Kali - Pilot</button>
+        <button onclick="muatLB('Space Kali - Kapten', this)">Kali - Kapten</button>
+        <button onclick="muatLB('Space Bagi - Kadet', this)">Bagi - Kadet</button>
+        <button onclick="muatLB('Space Bagi - Pilot', this)">Bagi - Pilot</button>
+        <button onclick="muatLB('Space Bagi - Kapten', this)">Bagi - Kapten</button>
+      </div>
+
       <div id="leaderboardList" style="max-height: 200px; overflow-y: auto; font-size: 13px;"></div>
       <button class="btn secondary" onclick="document.getElementById('leaderboardArea').classList.add('hidden')" style="margin-top:10px; padding:8px; font-size:12px;">Tutup</button>
     </div>
@@ -395,16 +416,50 @@ function kirimSkorKeSheets(nama, kelas, skor, waktu, benar, callback) {
   fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload }).then(() => { if(callback) callback(true); }).catch(() => { if(callback) callback(false); });
 }
 function tampilkanLeaderboard() {
-  const area = document.getElementById('leaderboardArea'); const list = document.getElementById('leaderboardList');
-  area.classList.remove('hidden'); list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Memuat data...</p>';
-  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { list.innerHTML = '<p style="color:#EF4444;text-align:center;">API_URL belum diset.</p>'; return; }
-  fetch(`${API_URL}?limit=10&gameType=Space`).then(res => res.json()).then(data => {
-    if (!data || data.length === 0) { list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Belum ada data.</p>'; return; }
+  const area = document.getElementById('leaderboardArea');
+  area.classList.remove('hidden');
+  // Muat tab "Semua" secara default
+  const firstBtn = area.querySelector('.lb-filters button');
+  muatLB('', firstBtn);
+}
+
+function muatLB(filterKelas, btnElement) {
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Memuat data...</p>';
+  
+  if (btnElement) {
+    document.querySelectorAll('.lb-filters button').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+  }
+
+  if (!API_URL || API_URL.includes('GANTI_DENGAN')) { 
+    list.innerHTML = '<p style="color:#EF4444;text-align:center;">API_URL belum diset.</p>'; 
+    return; 
+  }
+
+  // Panggil API dengan parameter gameType=Space dan filterKelas
+  let url = `${API_URL}?limit=10&gameType=Space`;
+  if (filterKelas) url += `&kelas=${encodeURIComponent(filterKelas)}`;
+
+  fetch(url).then(res => res.json()).then(data => {
+    if (!data || data.length === 0) { 
+      list.innerHTML = '<p style="color:#94A3B8;text-align:center;">Belum ada data untuk mode ini.</p>'; 
+      return; 
+    }
     list.innerHTML = data.map((item, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #334155; padding:8px 0;"><div><span style="color:#FBBF24; margin-right:5px;">${medal}</span> <b>${escapeHtml(item.nama)}</b><br><small style="color:#94A3B8;">${escapeHtml(item.kelas)}</small></div><div style="color:#10B981; font-weight:bold; font-size:16px;">${item.skor}</div></div>`;
+      return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #334155; padding:8px 0;">
+        <div>
+          <span style="color:#FBBF24; margin-right:5px;">${medal}</span> 
+          <b>${escapeHtml(item.nama)}</b><br>
+          <small style="color:#94A3B8;">${escapeHtml(item.kelas)}</small>
+        </div>
+        <div style="color:#10B981; font-weight:bold; font-size:16px;">${item.skor}</div>
+      </div>`;
     }).join('');
-  }).catch(() => { list.innerHTML = '<p style="color:#EF4444;text-align:center;">Gagal memuat data.</p>'; });
+  }).catch(() => { 
+    list.innerHTML = '<p style="color:#EF4444;text-align:center;">Gagal memuat data.</p>'; 
+  });
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function playSound(freq) {
